@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Plugin for matrix/heatmap chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix/dist/chartjs-chart-matrix.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-cyan-400">Loan Analysis Dashboard</h1>
+            <a href="/" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white font-semibold transition-colors">
+                &larr; Back to Prediction
+            </a>
+        </header>
+
+        <div id="loading" class="text-center text-lg text-gray-400">Loading dashboard data...</div>
+        
+        <div id="dashboard-content" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Chart Containers -->
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg col-span-1">
+                <h2 class="text-xl font-semibold mb-4 text-gray-300">Loan Status Distribution</h2>
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg col-span-1 md:col-span-2">
+                <h2 class="text-xl font-semibold mb-4 text-gray-300">Approval Count by Property Area</h2>
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg col-span-1 md:col-span-3">
+                <h2 class="text-xl font-semibold mb-4 text-gray-300">Loan Applications Over Time</h2>
+                <canvas id="lineGraph"></canvas>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg col-span-1 md:col-span-2">
+                 <h2 class="text-xl font-semibold mb-4 text-gray-300">Applicant Income vs. Loan Amount</h2>
+                <canvas id="scatterPlot"></canvas>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg col-span-1">
+                <h2 class="text-xl font-semibold mb-4 text-gray-300">Applicant Income Distribution</h2>
+                <canvas id="histogram"></canvas>
+            </div>
+             <div id="heatmap-container" class="bg-gray-800 p-6 rounded-2xl shadow-lg col-span-1 md:col-span-3">
+                <h2 class="text-xl font-semibold mb-4 text-gray-300">Feature Correlation Heatmap</h2>
+                <canvas id="heatmap"></canvas>
+                <p id="heatmap-message" class="hidden text-center text-gray-400">Not enough data to display heatmap. Please make more predictions.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingEl = document.getElementById('loading');
+            const contentEl = document.getElementById('dashboard-content');
+
+            fetch('/api/dashboard_data')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingEl.style.display = 'none';
+                    contentEl.classList.remove('hidden');
+                    
+                    // --- IMPROVEMENT: Wrap each chart render in a try/catch block ---
+                    // This prevents one failing chart from breaking the entire dashboard.
+                    try { renderPieChart(data.pie_chart); } 
+                    catch (e) { console.error("Failed to render Pie Chart:", e); }
+                    
+                    try { renderBarChart(data.bar_chart); }
+                    catch (e) { console.error("Failed to render Bar Chart:", e); }
+
+                    try { renderLineGraph(data.line_graph); }
+                    catch (e) { console.error("Failed to render Line Graph:", e); }
+
+                    try { renderHistogram(data.histogram_data); }
+                    catch (e) { console.error("Failed to render Histogram:", e); }
+
+                    try { renderScatterPlot(data.scatter_data); }
+                    catch (e) { console.error("Failed to render Scatter Plot:", e); }
+
+                    try { renderHeatmap(data.heatmap_data); }
+                    catch (e) { console.error("Failed to render Heatmap:", e); }
+                })
+                .catch(error => {
+                    console.error('Error fetching or processing dashboard data:', error);
+                    loadingEl.textContent = 'Failed to load dashboard data. Check the console for errors.';
+                });
+
+            const chartColors = {
+                primary: 'rgba(34, 211, 238, 0.6)',
+                primaryHover: 'rgba(34, 211, 238, 0.8)',
+                grid: 'rgba(255, 255, 255, 0.1)',
+                text: 'rgba(255, 255, 255, 0.8)'
+            };
+
+            function renderPieChart(pieData) {
+                if (!pieData || !pieData.labels || !pieData.values) return;
+                const ctx = document.getElementById('pieChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: pieData.labels,
+                        datasets: [{
+                            data: pieData.values,
+                            backgroundColor: ['rgba(22, 163, 74, 0.7)', 'rgba(220, 38, 38, 0.7)'],
+                            borderColor: ['#16A34A', '#DC2626'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: chartColors.text } } }
+                    }
+                });
+            }
+
+            function renderBarChart(barData) {
+                if (!barData || !barData.labels || !barData.values) return;
+                const ctx = document.getElementById('barChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: barData.labels,
+                        datasets: [{
+                            label: 'Approved Loans',
+                            data: barData.values,
+                            backgroundColor: chartColors.primary,
+                            borderColor: chartColors.primaryHover,
+                            borderWidth: 1,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text } },
+                            x: { grid: { color: 'transparent' }, ticks: { color: chartColors.text } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function renderLineGraph(lineData) {
+                if (!lineData || !lineData.labels || !lineData.values || lineData.labels.length === 0) return;
+                const ctx = document.getElementById('lineGraph').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: lineData.labels,
+                        datasets: [{
+                            label: 'Applications per Day',
+                            data: lineData.values,
+                            borderColor: chartColors.primary,
+                            backgroundColor: 'rgba(34, 211, 238, 0.2)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                       scales: {
+                            y: { beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text, stepSize: 1 } },
+                            x: { 
+                                type: 'time',
+                                time: { unit: 'day' },
+                                grid: { color: 'transparent' }, 
+                                ticks: { color: chartColors.text } 
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function renderHistogram(histData) {
+                if (!histData || !histData.incomes) return;
+                const ctx = document.getElementById('histogram').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                     data: {
+                        labels: ['<10k', '10-20k', '20-30k', '30-40k', '>40k'],
+                        datasets: [{
+                            label: 'Number of Applicants',
+                            data: [
+                                histData.incomes.filter(i => i < 10000).length,
+                                histData.incomes.filter(i => i >= 10000 && i < 20000).length,
+                                histData.incomes.filter(i => i >= 20000 && i < 30000).length,
+                                histData.incomes.filter(i => i >= 30000 && i < 40000).length,
+                                histData.incomes.filter(i => i >= 40000).length,
+                            ],
+                            backgroundColor: chartColors.primary
+                        }]
+                    },
+                     options: {
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: chartColors.grid }, ticks: { color: chartColors.text } },
+                            x: { grid: { color: 'transparent' }, ticks: { color: chartColors.text } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function renderScatterPlot(scatterData) {
+                if (!scatterData || scatterData.length === 0) return;
+                const ctx = document.getElementById('scatterPlot').getContext('2d');
+                new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Income vs Loan',
+                            data: scatterData.map(d => ({x: d.ApplicantIncome, y: d.LoanAmount})),
+                            backgroundColor: chartColors.primary,
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: { title: { display: true, text: 'Applicant Income', color: chartColors.text }, grid: { color: chartColors.grid }, ticks: { color: chartColors.text } },
+                            y: { title: { display: true, text: 'Loan Amount', color: chartColors.text }, grid: { color: chartColors.grid }, ticks: { color: chartColors.text } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function renderHeatmap(heatmapData) {
+                const canvas = document.getElementById('heatmap');
+                const message = document.getElementById('heatmap-message');
+
+                if (!heatmapData || !heatmapData.labels || heatmapData.labels.length === 0) {
+                    canvas.style.display = 'none';
+                    message.classList.remove('hidden');
+                    return;
+                }
+
+                const ctx = canvas.getContext('2d');
+                const data = {
+                    labels: heatmapData.labels,
+                    datasets: heatmapData.data.map((row, i) => ({
+                        label: heatmapData.labels[i],
+                        data: row.map((val, j) => ({x: j, y: i, v: val})),
+                        backgroundColor: (c) => {
+                             const value = c.raw.v;
+                             if (value > 0.5) return 'rgba(22, 163, 74, 0.9)';
+                             if (value > 0) return 'rgba(22, 163, 74, 0.4)';
+                             if (value < -0.5) return 'rgba(220, 38, 38, 0.9)';
+                             if (value < 0) return 'rgba(220, 38, 38, 0.4)';
+                             return 'rgba(255, 255, 255, 0.1)';
+                        },
+                        borderWidth: 1,
+                        width: ({chart}) => (chart.chartArea || {}).width / heatmapData.labels.length - 1,
+                        height: ({chart}) => (chart.chartArea || {}).height / heatmapData.labels.length - 1,
+                    }))
+                };
+
+                 new Chart(ctx, {
+                    type: 'matrix',
+                    data: data,
+                    options: {
+                         plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: () => '',
+                                    label: (c) => [`Correlation: ${c.raw.v.toFixed(2)}`]
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'category',
+                                labels: heatmapData.labels,
+                                ticks: { color: chartColors.text },
+                                grid: { display: false }
+                            },
+                            y: {
+                                type: 'category',
+                                labels: heatmapData.labels,
+                                offset: true,
+                                ticks: { color: chartColors.text },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

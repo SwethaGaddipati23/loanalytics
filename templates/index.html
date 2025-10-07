@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Prediction System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen py-12">
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-4xl">
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-3xl font-bold text-cyan-400">Loan Eligibility Prediction</h1>
+            <a href="/dashboard" class="bg-gray-700 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+                View Dashboard
+            </a>
+        </div>
+        <p class="text-center text-gray-400 mb-8">Enter the applicant's details below for a detailed analysis.</p>
+
+        <form id="prediction-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Column 1 -->
+            <div class="space-y-4">
+                 <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-300">Gender</label>
+                    <select id="gender" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        <option>Male</option>
+                        <option>Female</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="married" class="block text-sm font-medium text-gray-300">Married</label>
+                    <select id="married" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        <option>Yes</option>
+                        <option>No</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dependents" class="block text-sm font-medium text-gray-300">Dependents</label>
+                    <select id="dependents" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        <option>0</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3+</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="education" class="block text-sm font-medium text-gray-300">Education</label>
+                    <select id="education" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        <option>Graduate</option>
+                        <option>Not Graduate</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="self_employed" class="block text-sm font-medium text-gray-300">Self Employed</label>
+                    <select id="self_employed" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        <option>No</option>
+                        <option>Yes</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="property_area" class="block text-sm font-medium text-gray-300">Property Area</label>
+                    <select id="property_area" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        <option>Urban</option>
+                        <option>Rural</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="space-y-4">
+                <div>
+                    <label for="applicant_income" class="block text-sm font-medium text-gray-300">Applicant Income ($)</label>
+                    <input type="number" id="applicant_income" value="5849" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                </div>
+                <div>
+                    <label for="coapplicant_income" class="block text-sm font-medium text-gray-300">Co-applicant Income ($)</label>
+                    <input type="number" id="coapplicant_income" value="0" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                </div>
+                <div>
+                    <label for="loan_amount" class="block text-sm font-medium text-gray-300">Loan Amount (in thousands $)</label>
+                    <input type="number" id="loan_amount" value="146" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                </div>
+                <div>
+                    <label for="loan_amount_term" class="block text-sm font-medium text-gray-300">Loan Amount Term (months)</label>
+                    <input type="number" id="loan_amount_term" value="360" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                </div>
+                <div>
+                    <label for="credit_history" class="block text-sm font-medium text-gray-300">Credit History</label>
+                    <select id="credit_history" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        <option value="1">Good (All debts paid)</option>
+                        <option value="0">Bad (Debts not paid)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="md:col-span-2 flex justify-center">
+                 <button type="submit" class="mt-6 w-1/2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105">
+                    Get Detailed Analysis
+                </button>
+            </div>
+        </form>
+
+        <!-- Result Section -->
+        <div id="result-container" class="mt-8 pt-6 border-t border-gray-700 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- Left: Textual Analysis -->
+                <div id="text-analysis">
+                    <h2 id="result-status" class="text-3xl font-bold mb-2"></h2>
+                    <p id="result-confidence" class="text-lg text-gray-400 mb-4"></p>
+                    <p id="result-description" class="text-gray-300"></p>
+                </div>
+                <!-- Right: Visual Chart -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-2 text-center">Key Decision Factors</h3>
+                    <canvas id="importanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div id="loading-state" class="text-center mt-8 hidden"><p class="text-gray-400">Analyzing...</p></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const resultContainer = document.getElementById('result-container');
+        const loadingDiv = document.getElementById('loading-state');
+        
+        const resultStatus = document.getElementById('result-status');
+        const resultConfidence = document.getElementById('result-confidence');
+        const resultDescription = document.getElementById('result-description');
+        const chartCanvas = document.getElementById('importanceChart');
+        let myChart;
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            resultContainer.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+
+            const formData = {
+                'Gender': document.getElementById('gender').value,
+                'Married': document.getElementById('married').value,
+                'Dependents': document.getElementById('dependents').value,
+                'Education': document.getElementById('education').value,
+                'Self_Employed': document.getElementById('self_employed').value,
+                'ApplicantIncome': document.getElementById('applicant_income').value,
+                'CoapplicantIncome': document.getElementById('coapplicant_income').value,
+                'LoanAmount': document.getElementById('loan_amount').value,
+                'Loan_Amount_Term': document.getElementById('loan_amount_term').value,
+                'Credit_History': document.getElementById('credit_history').value,
+                'Property_Area': document.getElementById('property_area').value
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const result = await response.json();
+                
+                if (result.prediction === 'Y') {
+                    resultStatus.textContent = "Loan Approved";
+                    resultStatus.className = "text-3xl font-bold mb-2 text-green-400";
+                } else {
+                    resultStatus.textContent = "Loan Rejected";
+                    resultStatus.className = "text-3xl font-bold mb-2 text-red-400";
+                }
+                resultConfidence.textContent = `Model Confidence: ${Math.round(result.confidence * 100)}%`;
+                resultDescription.textContent = result.description;
+
+                const chartData = {
+                    labels: result.feature_importance.map(item => item.feature.replace(/_/g, ' ')),
+                    datasets: [{
+                        label: 'Impact on Decision',
+                        data: result.feature_importance.map(item => item.impact),
+                        backgroundColor: result.feature_importance.map(item => item.impact > 0 ? 'rgba(74, 222, 128, 0.6)' : 'rgba(248, 113, 113, 0.6)'),
+                        borderColor: result.feature_importance.map(item => item.impact > 0 ? 'rgba(74, 222, 128, 1)' : 'rgba(248, 113, 113, 1)'),
+                        borderWidth: 1
+                    }]
+                };
+
+                if (myChart) myChart.destroy();
+
+                myChart = new Chart(chartCanvas, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        indexAxis: 'y',
+                        scales: {
+                            x: { 
+                                beginAtZero: true,
+                                ticks: { color: '#9CA3AF' },
+                                grid: { color: '#4B5563' }
+                            },
+                             y: {
+                                ticks: { color: '#D1D5DB' },
+                                grid: { color: '#4B5563' }
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                loadingDiv.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Error during prediction:", error);
+                loadingDiv.innerHTML = `<p class="text-red-500">Error: Could not get a prediction. Check console for details.</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
+
